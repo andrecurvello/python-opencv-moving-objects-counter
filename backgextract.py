@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import cv2
 import numpy as np
-c = cv2.VideoCapture(2)
+c = cv2.VideoCapture(0)
 _,f = c.read()
 
 def color2gray(img):
