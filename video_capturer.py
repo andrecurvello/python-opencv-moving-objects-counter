@@ -3,20 +3,21 @@ import logging
 import numpy as np
 LOG = logging.getLogger(__name__)
 
-
 class video_capturer():
-    def __init__( self ):
+    def __init__( self, initiate_background=False ):
         self.c = cv2.VideoCapture(0)
         self.resize_factor = 0.5
         self.blur_kernel_size = 11 # (int(np.max(frame.shape)*0.04)/2)*2+1 # Allways an odd number
         self.alpha = 0.001
         self.background = np.float32(self._get_frame())
         self.avg = self.background
+        self.initiate_background = initiate_background
 
     def __enter__( self ):
         """ What to do when entering the with statement."""
         # Makes the background initialization a bit quicker. Uncomment the next line.
-        # self.init_background() 
+        if self.initiate_background:
+            self.init_background() 
         return self
 
     def __exit__(self, type, value, traceback):
@@ -25,6 +26,7 @@ class video_capturer():
         self.c.release()
 
     def init_background(self):
+        LOG.info("Initiating background.")
         # Save original value
         orig_alpha = self.alpha
         self.alpha = 1.0  # Just some high alpha value.
@@ -33,6 +35,7 @@ class video_capturer():
             self.alpha -= self.alpha/10.0 # Reduce by 10%.
             LOG.debug("New alpha: '%f'"%(self.alpha))
         self.alpha = orig_alpha
+        LOG.info("Initiation done.")
 
     def resize(self, img, factor):
         imgsize=img.shape
