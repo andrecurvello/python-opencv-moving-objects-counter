@@ -3,10 +3,16 @@ import logging
 import numpy as np
 LOG = logging.getLogger(__name__)
 
+class VideoCapturerError(Exception):
+    pass
+
 class video_capturer():
-    def __init__( self, initiate_background=False ):
+    def __init__( self, frame_resize_factor=None, initiate_background=False ):
         self.c = cv2.VideoCapture(0)
-        self.resize_factor = 0.5
+        if frame_resize_factor and (frame_resize_factor <= 0 or frame_resize_factor > 1):
+            raise VideoCapturerError( "Resize factor, '%f', must be between 0 and 1."%( frame_resize_factor ) )
+        self.frame_resize_factor = frame_resize_factor
+
         self.blur_kernel_size = 11 # (int(np.max(frame.shape)*0.04)/2)*2+1 # Allways an odd number
         self.alpha = 0.001
         self.background = np.float32(self._get_frame())
@@ -38,11 +44,13 @@ class video_capturer():
         LOG.info("Initiation done.")
 
     def resize(self, img, factor):
-        imgsize=img.shape
-        imgwidth=int(imgsize[1]*factor)
-        imgheight=int(imgsize[0]*factor)
-        LOG.debug( "Image resized to (%f,%f)"%(imgwidth, imgheight) )
-        return cv2.resize(img,(imgwidth,imgheight))
+        if factor < 1:
+            imgsize=img.shape
+            imgwidth=int(imgsize[1]*factor)
+            imgheight=int(imgsize[0]*factor)
+            LOG.debug( "Image resized to (%f,%f)"%(imgwidth, imgheight) )
+            return cv2.resize(img,(imgwidth,imgheight))
+        return img
 
     def preprocess(self, img):
         kernel_size = (self.blur_kernel_size,self.blur_kernel_size)
@@ -57,7 +65,8 @@ class video_capturer():
 
     def _get_frame(self):
         _,frame = self.c.read()
-        frame = self.resize(frame, self.resize_factor)
+        if self.frame_resize_factor:
+            frame = self.resize(frame, self.frame_resize_factor)
         frame = self.preprocess(frame)
         return frame
 
