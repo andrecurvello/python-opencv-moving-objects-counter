@@ -8,6 +8,7 @@ class VideoCapturerError(Exception):
 
 class video_capturer():
     def __init__( self, frame_resize_factor=None, initiate_background=False ):
+        """ Constructror """
         self.c = cv2.VideoCapture(0)
         if frame_resize_factor and (frame_resize_factor <= 0 or frame_resize_factor > 1):
             raise VideoCapturerError( "Resize factor, '%f', must be between 0 and 1."%( frame_resize_factor ) )
